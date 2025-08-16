@@ -1,0 +1,114 @@
+---
+title: "Exploration of IPEDS Finance Tables"
+subtitle: "Sections of this will go into IPEDS App"
+author: "Luke Slipski"
+date: "Published on `r format(Sys.time(), '%m-%d-%y')`"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 5
+fig-cap-location: top
+editor:
+  markdown:
+    wrap: 72
+execute: 
+  echo: false
+  output: false
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+source(here::here('src/functions/load_functions.R'))
+load_functions()
+```
+
+# Load Public institutions - GASB 34/35: Fiscal year 2023 (F2223_F1A)
+```{r}
+years = c("2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022", 
+          "2023")
+
+
+df_f1a <- load_public_financial(years)
+df_directory <- load_directory(years)
+```
+
+# Variables of Interest
+
+```{r}
+#| output: true
+vars <- tribble(~variable, ~description, ~notes,
+                "F1N05", "Expendable net assets", "",
+                "F1N07", "Total expenses", "This is null prior to 2020",
+                "F1D02", "Total expenses and other deductions", "This matches the 'Total Expenses' row in the online example",
+                "F1A17", "Unrestricted", "This is a confusing variable name, but it matches the 'Expendable Net Assets' row in the online example",
+                "F1D03", "Change in net position during the year", "This corresponds to 'Change in Net Assets' row in the online example") %>% 
+  janitor::clean_names()
+
+vars %>% 
+  dt_table(search = F,
+           filter = F,
+           page = F)
+```
+
+
+# Reproduce Public University Financial Analysis
+
+Example from SCR Website [here](https://docs.google.com/spreadsheets/d/156bbBH0L0Rsrt3YSfpgwxn6OaTu-CeLBJ9oqvv4P56Y/edit?pli=1&gid=1803342980#gid=1803342980)
+
+```{r}
+unis = c("University of Massachusetts-Amherst",
+         "Indiana University-Bloomington ",
+         "Iowa State University",
+         "Rutgers University-New Brunswick")
+
+df_f1a %>% 
+  left_join(df_directory,
+            by = c("unitid" = "unitid",
+                   "year" = "year")) %>% 
+  filter(instnm %in% unis) %>% 
+  select(year,
+         unitid,
+         instnm,
+         expendable_net_assets =f1a17,
+         total_expenses = f1d02,
+         change_in_net_assets = f1d03,
+         total_net_asssets = f1a14) %>% 
+  mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
+         net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2))
+```
+
+
+
+
+
+# Lookup
+```{r}
+df_f1a %>% 
+    left_join(df_directory,
+              by = c("unitid" = "unitid",
+                     "year" = "year")) %>% 
+    filter(instnm %in% "Iowa State University") %>% filter(year == 2017) %>% 
+    pivot_longer(.,
+                 cols = !starts_with("unitid"),
+                 names_to = "label",
+                 values_to = "values",
+                 values_transform = list(values = as.character)) %>% filter(values == "962297627")
+```
+
+
+
+
+
+
+
+
+
+
+
