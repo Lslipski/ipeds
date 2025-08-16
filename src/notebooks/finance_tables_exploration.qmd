@@ -63,10 +63,10 @@ vars %>%
 Example from SCR Website [here](https://docs.google.com/spreadsheets/d/156bbBH0L0Rsrt3YSfpgwxn6OaTu-CeLBJ9oqvv4P56Y/edit?pli=1&gid=1803342980#gid=1803342980)
 
 ```{r}
-unis = c("University of Massachusetts-Amherst",
-         "Indiana University-Bloomington ",
-         "Iowa State University",
-         "Rutgers University-New Brunswick")
+unis = c("University of Massachusetts-Amherst")
+         # "Indiana University-Bloomington ",
+         # "Iowa State University",
+         # "Rutgers University-New Brunswick")
 
 df_f1a %>% 
   left_join(df_directory,
@@ -79,10 +79,22 @@ df_f1a %>%
          expendable_net_assets =f1a17,
          total_expenses = f1d02,
          change_in_net_assets = f1d03,
-         total_net_asssets = f1a14) %>% 
+         total_net_asssets = f1a14,
+         op_inc_b09 = f1b09,
+         op_inc_c110 = f1c101,
+         revenue = f1b25,
+         expendable_net_assets = f1a17,
+         long_term_debt = f1a10) %>% 
   mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
-         net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2))
+         net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2),
+         operating_income = op_inc_b09 - op_inc_c110,
+         net_operating_revenue_ratio = round(operating_income / revenue, 2),
+         viability_ratio = round(expendable_net_assets / long_term_debt, 2))
 ```
+
+
+
+
 
 
 
@@ -99,7 +111,7 @@ df_f1a %>%
                  cols = !starts_with("unitid"),
                  names_to = "label",
                  values_to = "values",
-                 values_transform = list(values = as.character)) %>% filter(values == "962297627")
+                 values_transform = list(values = as.character)) %>% filter(values == "31468460")
 ```
 
 
