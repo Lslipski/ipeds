@@ -134,7 +134,7 @@ server <- function(input, output, session) {
       gt(
         rowname_col = "column"
       ) %>% 
-      tab_header(title = unis) %>% 
+      tab_header(title = input$this_college) %>% 
       tab_spanner(
         label = "Year",
         columns = sort(input$this_year, decreasing = T)
@@ -171,7 +171,7 @@ server <- function(input, output, session) {
       gt(
         rowname_col = "column"
       ) %>% 
-      tab_header(title = unis) %>% 
+      tab_header(title = input$this_college) %>% 
       tab_spanner(
         label = "Year",
         columns = sort(input$this_year, decreasing = T)
@@ -208,7 +208,7 @@ server <- function(input, output, session) {
       gt(
         rowname_col = "column"
       ) %>% 
-      tab_header(title = unis) %>% 
+      tab_header(title = input$this_college) %>% 
       tab_spanner(
         label = "Year",
         columns = sort(input$this_year, decreasing = T)
@@ -245,7 +245,7 @@ server <- function(input, output, session) {
       gt(
         rowname_col = "column"
       ) %>% 
-      tab_header(title = unis) %>% 
+      tab_header(title = input$this_college) %>% 
       tab_spanner(
         label = "Year",
         columns = sort(input$this_year, decreasing = T)
