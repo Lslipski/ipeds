@@ -20,6 +20,7 @@ execute:
 ```{r}
 library(tidyverse)
 library(janitor)
+library(gt)
 source(here::here('src/functions/load_functions.R'))
 load_functions()
 ```
@@ -68,7 +69,8 @@ unis = c("University of Massachusetts-Amherst")
          # "Iowa State University",
          # "Rutgers University-New Brunswick")
 
-df_f1a %>% 
+
+df <- df_f1a %>% 
   left_join(df_directory,
             by = c("unitid" = "unitid",
                    "year" = "year")) %>% 
@@ -89,10 +91,52 @@ df_f1a %>%
          net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2),
          operating_income = op_inc_b09 - op_inc_c110,
          net_operating_revenue_ratio = round(operating_income / revenue, 2),
-         viability_ratio = round(expendable_net_assets / long_term_debt, 2))
+         viability_ratio = round(expendable_net_assets / long_term_debt, 2)) %>% 
+  select(-unitid,
+         -instnm)
+  # pivot_longer(.,
+  #              cols = -c("year"),
+  #              names_to = "column",
+  #              values_to = "value",
+  #              values_transform = list(value = as.character))
 ```
 
-
+```{r}
+# df primary reserve
+df %>% 
+  select(year,
+         expendable_net_assets,
+         total_expenses,
+         primary_reserve_ratio) %>% 
+  pivot_longer(names_to = "column",
+               values_to = "values",
+               cols = -c("year"),
+               values_transform = list(values = as.character)) %>% 
+  mutate(values = as.numeric(values)) %>% 
+  arrange(desc(year)) %>% 
+  pivot_wider(names_from = "year",
+              values_from = "values") %>% 
+  gt(
+    rowname_col = "column"
+  ) %>% 
+  tab_header(title = unis) %>% 
+  tab_spanner(
+    label = "Year",
+    columns = sort(years, decreasing = T)
+  ) %>% 
+  fmt_number(
+    columns = starts_with("2"),
+    rows = c("expendable_net_assets",
+             "total_expenses"),
+    decimals = 0,
+    use_seps = TRUE
+  ) %>% 
+  data_color(
+    columns = everything(),
+    rows = "primary_reserve_ratio",
+    palette = c("#EA8D2D")
+  )
+```
 
 
 
