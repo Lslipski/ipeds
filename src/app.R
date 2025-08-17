@@ -49,32 +49,29 @@ ui <- page_sidebar(
     card_header(
       "Primary Reserve Ratio"
     ),
-    gt_output('tbl_primary_reserve'),
-    gt_output('tbl_net_assets'),
-    gt_output('tbl_net_op_rev'),
-    gt_output('tbl_viability')
+    gt_output('tbl_primary_reserve')
   ),
   
-  # card(
-  #   card_header(
-  #     "Net Asset Ratio"
-  #   ),
-  #   gt_output('tbl_net_assets')
-  # ),
-  # 
-  # card(
-  #   card_header(
-  #     "Net Operating Revenue Ratio"
-  #   ),
-  #   gt_output('tbl_net_op_rev')
-  # ),
-  # 
-  # card(
-  #   card_header(
-  #     "Viability Ratio"
-  #   ),
-  #   gt_output('tbl_viability')
-  # )
+  card(
+    card_header(
+      "Net Asset Ratio"
+    ),
+    gt_output('tbl_net_assets')
+  ),
+
+  card(
+    card_header(
+      "Net Operating Revenue Ratio"
+    ),
+    gt_output('tbl_net_op_rev')
+  ),
+
+  card(
+    card_header(
+      "Viability Ratio"
+    ),
+    gt_output('tbl_viability')
+  )
   
   
 )
