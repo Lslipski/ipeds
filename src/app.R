@@ -31,24 +31,52 @@ ui <- page_sidebar(
   
   sidebar = sidebar(
     
-    selectInput(inputId = "this_year", 
-                label = "Year",
-                choices = years,
-                selected = "2023",
-                multiple = TRUE),
-    
     # Choose University
     selectInput(inputId = "this_college",
                 label = "University",
                 choices = df_directory %>% 
                   distinct(instnm),
-                multiple = FALSE,
-                selected = )
+                multiple = FALSE),
+    
+    # Choose Years
+    checkboxGroupInput(inputId = "this_year", 
+                label = "Year",
+                choices = years,
+                selected = years),
   ),
   
   card(
-    gt_output('tbl_primary_reserve')
-  )
+    card_header(
+      "Primary Reserve Ratio"
+    ),
+    gt_output('tbl_primary_reserve'),
+    gt_output('tbl_net_assets'),
+    gt_output('tbl_net_op_rev'),
+    gt_output('tbl_viability')
+  ),
+  
+  # card(
+  #   card_header(
+  #     "Net Asset Ratio"
+  #   ),
+  #   gt_output('tbl_net_assets')
+  # ),
+  # 
+  # card(
+  #   card_header(
+  #     "Net Operating Revenue Ratio"
+  #   ),
+  #   gt_output('tbl_net_op_rev')
+  # ),
+  # 
+  # card(
+  #   card_header(
+  #     "Viability Ratio"
+  #   ),
+  #   gt_output('tbl_viability')
+  # )
+  
+  
 )
 
 
@@ -121,7 +149,119 @@ server <- function(input, output, session) {
       data_color(
         columns = everything(),
         rows = "primary_reserve_ratio",
-        palette = c("#EA8D2D")
+        palette = "plasma"
+      )
+  })
+  
+  
+  output$tbl_net_assets <- render_gt({
+    df() %>% 
+      dplyr::select(year,
+                    change_in_net_assets,
+                    total_net_asssets,
+                    net_assets_ratio) %>% 
+      tidyr::pivot_longer(names_to = "column",
+                          values_to = "values",
+                          cols = -c("year"),
+                          values_transform = list(values = as.character)) %>% 
+      dplyr::mutate(values = as.numeric(values)) %>% 
+      dplyr::arrange(desc(year)) %>% 
+      tidyr::pivot_wider(names_from = "year",
+                         values_from = "values") %>% 
+      gt(
+        rowname_col = "column"
+      ) %>% 
+      tab_header(title = unis) %>% 
+      tab_spanner(
+        label = "Year",
+        columns = sort(input$this_year, decreasing = T)
+      ) %>%
+      fmt_number(
+        columns = starts_with("2"),
+        rows = c("change_in_net_assets",
+                 "total_net_asssets"),
+        decimals = 0,
+        use_seps = TRUE
+      ) %>% 
+      data_color(
+        columns = everything(),
+        rows = "net_assets_ratio",
+        palette = "plasma"
+      )
+  })
+  
+  
+  output$tbl_net_op_rev<- render_gt({
+    df() %>% 
+      dplyr::select(year,
+                    operating_income,
+                    revenue,
+                    net_operating_revenue_ratio) %>% 
+      tidyr::pivot_longer(names_to = "column",
+                          values_to = "values",
+                          cols = -c("year"),
+                          values_transform = list(values = as.character)) %>% 
+      dplyr::mutate(values = as.numeric(values)) %>% 
+      dplyr::arrange(desc(year)) %>% 
+      tidyr::pivot_wider(names_from = "year",
+                         values_from = "values") %>% 
+      gt(
+        rowname_col = "column"
+      ) %>% 
+      tab_header(title = unis) %>% 
+      tab_spanner(
+        label = "Year",
+        columns = sort(input$this_year, decreasing = T)
+      ) %>%
+      fmt_number(
+        columns = starts_with("2"),
+        rows = c("operating_income",
+                 "revenue"),
+        decimals = 0,
+        use_seps = TRUE
+      ) %>% 
+      data_color(
+        columns = everything(),
+        method = "numeric",
+        rows = "net_operating_revenue_ratio",
+        palette = "plasma"
+      )
+  })
+  
+  output$tbl_viability <- render_gt({
+    df() %>% 
+      dplyr::select(year,
+                    expendable_net_assets,
+                    long_term_debt,
+                    viability_ratio) %>% 
+      tidyr::pivot_longer(names_to = "column",
+                          values_to = "values",
+                          cols = -c("year"),
+                          values_transform = list(values = as.character)) %>% 
+      dplyr::mutate(values = as.numeric(values)) %>% 
+      dplyr::arrange(desc(year)) %>% 
+      tidyr::pivot_wider(names_from = "year",
+                         values_from = "values") %>% 
+      gt(
+        rowname_col = "column"
+      ) %>% 
+      tab_header(title = unis) %>% 
+      tab_spanner(
+        label = "Year",
+        columns = sort(input$this_year, decreasing = T)
+      ) %>%
+      fmt_number(
+        columns = starts_with("2"),
+        rows = c("expendable_net_assets",
+                 "long_term_debt"),
+        decimals = 0,
+        use_seps = TRUE
+      ) %>% 
+      data_color(
+        columns = everything(),
+        method = "numeric",
+        rows = "viability_ratio",
+        palette = "plasma"
       )
   })
   
