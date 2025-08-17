@@ -46,7 +46,7 @@ ui <- page_sidebar(
   ),
   
   card(
-    height = 500,
+    min_height = 300,
     card_header(
       "Primary Reserve Ratio"
     ),
@@ -54,7 +54,7 @@ ui <- page_sidebar(
   ),
   
   card(
-    height = 500,
+    min_height = 300,
     card_header(
       "Net Asset Ratio"
     ),
@@ -62,7 +62,7 @@ ui <- page_sidebar(
   ),
 
   card(
-    height = 500,
+    min_height = 300,
     card_header(
       "Net Operating Revenue Ratio"
     ),
@@ -70,7 +70,7 @@ ui <- page_sidebar(
   ),
 
   card(
-    height = 500,
+    min_height = 300,
     card_header(
       "Viability Ratio"
     ),
