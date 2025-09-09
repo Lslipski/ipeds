@@ -23,6 +23,9 @@ min_card_height = 350
 link_scr <- tags$a("Strategic Corporate Research", href = "https://strategiccorporateresearch.org/", target = "_blank")
 link_ipeds <- tags$a("IPEDS", href = "https://nces.ed.gov/ipeds", target = "_blank")
 
+# Header
+my_title <- "IPEDS Data"
+
 # data
 df_f1a <- load_public_financial(years)
 df_directory <- load_directory(years) %>% 
@@ -33,6 +36,8 @@ df_directory <- load_directory(years) %>%
 # Define UI --------------------------------------------------------------------
 
 ui <- page_sidebar(
+  
+  title = my_title,
   
   sidebar = sidebar(
     
@@ -114,7 +119,7 @@ ui <- page_sidebar(
     ) # close nav menu
     
   ) # close navset_tab
-)
+) # close page_sidebar
 
 
 
