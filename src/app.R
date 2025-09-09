@@ -183,6 +183,10 @@ server <- function(input, output, session) {
         decimals = 0,
         use_seps = TRUE
       ) %>% 
+      fmt_currency(columns = everything(),
+                   rows = c("expendable_net_assets",
+                            "total_expenses"),
+                   decimals = 0) %>% 
       data_color(
         columns = everything(),
         rows = "primary_reserve_ratio",
@@ -220,6 +224,10 @@ server <- function(input, output, session) {
         decimals = 0,
         use_seps = TRUE
       ) %>% 
+      fmt_currency(columns = everything(),
+                   rows = c("change_in_net_assets",
+                            "total_net_asssets"),
+                   decimals = 0) %>% 
       data_color(
         columns = everything(),
         rows = "net_assets_ratio",
@@ -257,6 +265,10 @@ server <- function(input, output, session) {
         decimals = 0,
         use_seps = TRUE
       ) %>% 
+      fmt_currency(columns = everything(),
+                   rows = c("operating_income",
+                            "revenue"),
+                   decimals = 0) %>% 
       data_color(
         columns = everything(),
         method = "numeric",
@@ -294,6 +306,10 @@ server <- function(input, output, session) {
         decimals = 0,
         use_seps = TRUE
       ) %>% 
+      fmt_currency(columns = everything(),
+                   rows = c("expendable_net_assets",
+                            "long_term_debt"),
+                   decimals = 0) %>% 
       data_color(
         columns = everything(),
         method = "numeric",
