@@ -17,7 +17,13 @@ years = c("2017",
           "2022", 
           "2023")
 
+min_card_height = 350
 
+# Links
+link_scr <- tags$a("Strategic Corporate Research", href = "https://strategiccorporateresearch.org/", target = "_blank")
+link_ipeds <- tags$a("IPEDS", href = "https://nces.ed.gov/ipeds", target = "_blank")
+
+# data
 df_f1a <- load_public_financial(years)
 df_directory <- load_directory(years) %>% 
   mutate_if(is.character, utf8::utf8_encode)
@@ -27,7 +33,6 @@ df_directory <- load_directory(years) %>%
 # Define UI --------------------------------------------------------------------
 
 ui <- page_sidebar(
-  
   
   sidebar = sidebar(
     
@@ -45,39 +50,70 @@ ui <- page_sidebar(
                 selected = years),
   ),
   
-  card(
-    min_height = 300,
-    card_header(
-      "Primary Reserve Ratio"
-    ),
-    gt_output('tbl_primary_reserve')
-  ),
-  
-  card(
-    min_height = 300,
-    card_header(
-      "Net Asset Ratio"
-    ),
-    gt_output('tbl_net_assets')
-  ),
 
-  card(
-    min_height = 300,
-    card_header(
-      "Net Operating Revenue Ratio"
-    ),
-    gt_output('tbl_net_op_rev')
-  ),
-
-  card(
-    min_height = 300,
-    card_header(
-      "Viability Ratio"
-    ),
-    gt_output('tbl_viability')
-  )
-  
-  
+    bslib::navset_tab(
+      nav_panel(
+        title = "Public",
+        card(
+          min_height = min_card_height,
+          card_header(
+            "Primary Reserve Ratio"
+          ),
+          card_body("The primary reserve ratio divides the expendable net assets by the total expenses of the university and 
+                    gives an estimate of..."),
+          gt_output('tbl_primary_reserve')
+        ),
+        
+        card(
+          min_height = min_card_height,
+          card_header(
+            "Net Asset Ratio"
+          ),
+          card_body("The net asset ratio divides the change in net assets by the total net assets of the university and 
+                    gives an estimate of..."),
+          gt_output('tbl_net_assets')
+        ),
+      
+        card(
+          min_height = min_card_height,
+          card_header(
+            "Net Operating Revenue Ratio"
+          ),
+          card_body("The net operating revenue ratio divides the operating income by the revenue of the university and 
+                    gives an estimate of..."),
+          gt_output('tbl_net_op_rev')
+        ),
+      
+        card(
+          min_height = min_card_height,
+          card_header(
+            "Viability Ratio"
+          ),
+          card_body("The viability ratio divides the expendable net assets by the long term debt of the university and 
+                    gives an estimate of..."),
+          gt_output('tbl_viability')
+        )
+    ), # close nav_panel public institutions
+    
+    nav_panel(
+      title = "Private",
+      p("Under Construction")
+    ), # close nave_panel private institutions
+    
+    nav_panel(
+      title = "Not-for-Profit",
+      p("Under Construction")
+    ), # close nave_panel not for profit institutions
+    
+    nav_spacer(), # push link menu to right side
+    
+    nav_menu(
+      title = "Links",
+      nav_item(link_scr),
+      nav_item(link_ipeds)
+    ) # close nav menu
+    
+  ) # close navset_tab
 )
 
 
@@ -150,7 +186,7 @@ server <- function(input, output, session) {
       data_color(
         columns = everything(),
         rows = "primary_reserve_ratio",
-        palette = "plasma"
+        palette = "#007FFF"
       )
   })
   
@@ -187,7 +223,7 @@ server <- function(input, output, session) {
       data_color(
         columns = everything(),
         rows = "net_assets_ratio",
-        palette = "plasma"
+        palette = "#99EDFF"
       )
   })
   
@@ -225,7 +261,7 @@ server <- function(input, output, session) {
         columns = everything(),
         method = "numeric",
         rows = "net_operating_revenue_ratio",
-        palette = "plasma"
+        palette = "#FFEE99"
       )
   })
   
@@ -262,7 +298,7 @@ server <- function(input, output, session) {
         columns = everything(),
         method = "numeric",
         rows = "viability_ratio",
-        palette = "plasma"
+        palette = "#FF7F00"
       )
   })
   
