@@ -28,7 +28,7 @@ my_title <- "IPEDS Data"
 
 # data
 df_f1a <- load_public_financial(years)
-df_f3 <- load_private_financial(years)
+#df_f3 <- load_private_financial(years)
 df_directory <- load_directory(years) %>% 
   mutate_if(is.character, utf8::utf8_encode)
 
@@ -127,6 +127,8 @@ ui <- page_sidebar(
 # Define server ----------------------------------------------------------------
 
 server <- function(input, output, session) {
+  
+# PUBLIC UNIVERSITIES
   
 # create reactive data frame for public universities
   df_pub <- reactive({
@@ -322,6 +324,32 @@ server <- function(input, output, session) {
         rows = "viability_ratio",
         palette = "#FF7F00"
       )
+  })
+  
+  
+  ### PRIVATE UNIVERSITIES
+  # create reactive data frame for public universities
+  df_priv <- reactive({
+    req(input$this_college)
+    req(input$this_year)
+    df_f3 %>% 
+      dplyr::left_join(df_directory,
+                       by = c("unitid" = "unitid",
+                              "year" = "year")) %>% 
+      dplyr::filter(instnm == input$this_college,
+                    year %in% input$this_year) %>% 
+      dplyr::select(year,
+                    unitid,
+                    instnm,
+                    unrestricted_net_assets = f3a04) %>%
+      dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
+                    net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2),
+                    operating_income = op_inc_b09 - op_inc_c110,
+                    net_operating_revenue_ratio = round(operating_income / revenue, 2),
+                    viability_ratio = round(expendable_net_assets / long_term_debt, 2)) %>%
+      dplyr::select(-unitid,
+                    -instnm)
+    
   })
   
 }
