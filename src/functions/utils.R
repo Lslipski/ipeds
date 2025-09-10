@@ -18,6 +18,28 @@ load_public_financial <- function(years) {
   return(df)
 }
 
+
+# Load Financial Tables for Private Universities
+load_private_financial <- function(years) {
+  
+  load_csv = function(this_year) {
+    
+    df_f1a <- read_csv(paste0(here::here("data/"),
+                              "f3_",
+                              this_year,
+                              ".csv")) %>% 
+      janitor::clean_names() %>% 
+      mutate(year = this_year)
+  } 
+  
+  df = purrr::map(.x = years,
+                  ~ load_csv(.x)) %>% 
+    bind_rows()
+  
+  return(df)
+}
+
+
 # Load Directory Tables
 load_directory <- function(years) {
   
@@ -37,5 +59,10 @@ load_directory <- function(years) {
   
   return(df)
 }
+
+
+
+
+
 
 

@@ -28,6 +28,7 @@ my_title <- "IPEDS Data"
 
 # data
 df_f1a <- load_public_financial(years)
+df_f3 <- load_private_financial(years)
 df_directory <- load_directory(years) %>% 
   mutate_if(is.character, utf8::utf8_encode)
 
@@ -127,8 +128,8 @@ ui <- page_sidebar(
 
 server <- function(input, output, session) {
   
-# create reactive data frame
-  df <- reactive({
+# create reactive data frame for public universities
+  df_pub <- reactive({
     req(input$this_college)
     req(input$this_year)
     df_f1a %>% 
@@ -160,7 +161,7 @@ server <- function(input, output, session) {
   })
   
   output$tbl_primary_reserve <- render_gt({
-    df() %>% 
+    df_pub() %>% 
       dplyr::select(year,
                     expendable_net_assets,
                     total_expenses,
@@ -201,7 +202,7 @@ server <- function(input, output, session) {
   
   
   output$tbl_net_assets <- render_gt({
-    df() %>% 
+    df_pub() %>% 
       dplyr::select(year,
                     change_in_net_assets,
                     total_net_asssets,
@@ -242,7 +243,7 @@ server <- function(input, output, session) {
   
   
   output$tbl_net_op_rev<- render_gt({
-    df() %>% 
+    df_pub() %>% 
       dplyr::select(year,
                     operating_income,
                     revenue,
@@ -283,7 +284,7 @@ server <- function(input, output, session) {
   })
   
   output$tbl_viability <- render_gt({
-    df() %>% 
+    df_pub() %>% 
       dplyr::select(year,
                     expendable_net_assets,
                     long_term_debt,
