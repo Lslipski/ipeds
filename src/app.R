@@ -29,7 +29,7 @@ my_title <- "IPEDS Data"
 # data
 df_f1a <- load_public_financial(years)
 df_f2 <- load_nfp_financial(years)
-df_f3 <- load_private_financial(years)
+#df_f3 <- load_private_financial(years)
 df_directory <- load_directory(years) %>% 
   mutate_if(is.character, utf8::utf8_encode)
 
