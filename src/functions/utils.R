@@ -82,7 +82,55 @@ load_directory <- function(years) {
 }
 
 
+# Load Institution Names and their Associated Types
 
+load_institution_types <- function(years) {
+  
+  df_directory = load_directory(years)
+  
+  dplyr::bind_rows(
+    
+    # PUBLIC
+    df_directory %>% 
+      dplyr::select(instnm,
+                    unitid,
+                    year) %>% 
+      # limit to those that exist in PUBLIC financials df
+      dplyr::inner_join(load_public_financial(years) %>% 
+                          select(unitid,
+                                 year),
+                        by = c("unitid", "year")) %>% 
+      dplyr::distinct(instnm) %>% 
+      dplyr::mutate(type = "Public"),
+  
+  # PRIVATE
+  df_directory %>% 
+    dplyr::select(instnm,
+                  unitid,
+                  year) %>% 
+    # limit to those that exist in PUBLIC financials df
+    dplyr::inner_join(load_private_financial(years) %>% 
+                        select(unitid,
+                               year),
+                      by = c("unitid", "year")) %>% 
+    dplyr::distinct(instnm) %>% 
+    dplyr::mutate(type = "Private"),
+  
+  # PRIVATE
+  df_directory %>% 
+    dplyr::select(instnm,
+                  unitid,
+                  year) %>% 
+    # limit to those that exist in PUBLIC financials df
+    dplyr::inner_join(load_nfp_financial(years) %>% 
+                        select(unitid,
+                               year),
+                      by = c("unitid", "year")) %>% 
+    dplyr::distinct(instnm) %>% 
+    dplyr::mutate(type = "Not-for-Profit")
+  ) # close bind_cols
+  
+} # close load_institution_types
 
 
 
