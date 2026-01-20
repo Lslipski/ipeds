@@ -151,16 +151,18 @@ server <- function(input, output, session) {
   
   # STATIC TABLES --------------------------------------------------------------------- 
   output$tbl_lookup <- render_gt(df_institutions %>%
-    gt::gt() %>%
-    gt::opt_interactive(
-      use_search = TRUE,
-      use_filters = TRUE,
-      use_resizers = TRUE,
-      use_highlight = TRUE,
-      use_compact_mode = TRUE,
-      use_text_wrapping = FALSE,
-      use_page_size_select = TRUE
-      ))
+                                   rename(`Institution Name` = instnm,
+                                          `Institution Type` = type) %>% 
+                                   gt::gt() %>%
+                                   gt::opt_interactive(
+                                     use_search = TRUE,
+                                     use_filters = TRUE,
+                                     use_resizers = TRUE,
+                                     use_highlight = TRUE,
+                                     use_compact_mode = TRUE,
+                                     use_text_wrapping = FALSE,
+                                     use_page_size_select = TRUE
+                                     ))
   
   
   # FINANCIAL TABLE --------------------------------------------------------------------
