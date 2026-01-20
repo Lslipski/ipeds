@@ -124,7 +124,7 @@ ui <- page_sidebar(
     nav_spacer(), # push link menu to right side
     
     nav_menu(
-      title = "Links",
+      title = "External Links",
       nav_item(link_scr),
       nav_item(link_ipeds)
     ) # close nav menu
@@ -150,9 +150,17 @@ server <- function(input, output, session) {
   
   
   # STATIC TABLES --------------------------------------------------------------------- 
-  tbl_lookup <- df_institutions %>%
+  output$tbl_lookup <- render_gt(df_institutions %>%
     gt::gt() %>%
-    gt::opt_interactive()
+    gt::opt_interactive(
+      use_search = TRUE,
+      use_filters = TRUE,
+      use_resizers = TRUE,
+      use_highlight = TRUE,
+      use_compact_mode = TRUE,
+      use_text_wrapping = FALSE,
+      use_page_size_select = TRUE
+      ))
   
   
   # FINANCIAL TABLE --------------------------------------------------------------------
