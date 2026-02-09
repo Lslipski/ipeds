@@ -71,6 +71,7 @@ load_directory <- function(years) {
                               this_year,
                               ".csv")) %>% 
       janitor::clean_names() %>% 
+      distinct(unitid, instnm) %>% 
       mutate(year = this_year)
   } 
   

@@ -190,7 +190,6 @@ server <- function(input, output, session) {
                         op_inc_b09 = f1b09,
                         op_inc_c110 = f1c101,
                         revenue = f1b25,
-                        expendable_net_assets = f1a17,
                         long_term_debt = f1a10) %>%
           dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
                         net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2),
