@@ -68,13 +68,17 @@ ui <- page_sidebar(
     bslib::navset_tab(
       nav_panel(
         title = "Key Ratios",
+        
         card(
           min_height = min_card_height,
           card_header(
             "Primary Reserve Ratio"
           ),
           card_body("The primary reserve ratio answers the question: Are resources sufficient and flexible enough to support the mission?"),
-          gt_output('tbl_primary_reserve')
+          gt_output('tbl_primary_reserve'),
+          card_body(markdown("What is a good ratio? **0.4 or higher**
+                             
+                             What is a bad ratio? **0.15 or lower**"))
         ),
         
         # card(
@@ -87,16 +91,7 @@ ui <- page_sidebar(
         #   gt_output('tbl_net_assets')
         # ),
         # 
-        # card(
-        #   min_height = min_card_height,
-        #   card_header(
-        #     "Net Operating Revenue Ratio"
-        #   ),
-        #   card_body("The net operating revenue ratio divides the operating income by the revenue of the university and 
-        #             gives an estimate of..."),
-        #   gt_output('tbl_net_op_rev')
-        # ),
-        # 
+        
         card(
           min_height = min_card_height,
           card_header(
@@ -107,9 +102,23 @@ ui <- page_sidebar(
           1. Are debt resources managed strategically to advance the mission?
           
           2. Can the institution use its expendable net assets to cover debt?")),
-          gt_output('tbl_viability')
+          gt_output('tbl_viability'),
+          card_body(markdown("A good ratio depends on the firm's goals.  1:1 is nice, but less than that can be fine too if the firm's goals are to..."))
         )
-    ), # close nav_panel key ratios
+      ), # close nav_panel key ratios
+        
+        card(
+          min_height = min_card_height,
+          card_header(
+            "Net Operating Revenues Ratio"
+          ),
+          card_body("The Net Operating Revenues Ratio answers the question: Do operating results indicate the institution is living within available resources?"),
+          gt_output('tbl_net_op_rev'),
+          card_body(markdown("A positive ratio means there is an operating surplus for the year. A negative ratio means a loss for the year.
+          Generally, the bigger the surplus, the better. However, too big of a surplus might indicate that the institution is not spending enough on mission-critical investments.
+          An average of 2-4% over a period of several years for most institutions is good. Your goal should be to find out why there is a surplus or deficit. 
+          The institution should aim for long-term equilibrium."))
+        ),
     
     nav_panel(
       title = "Institution Lookup",
@@ -184,14 +193,13 @@ server <- function(input, output, session) {
                         instnm,
                         expendable_net_assets = f1n05,
                         total_expenses = f1d02,
-                        plant_related_debt = f1d03
-                        #change_in_net_assets = 
+                        plant_related_debt = f1d03,
+                        excess_unrest_op_rev = f1n01,
+                        total_unrestricted_op_rev = f1n02
                         ) %>%
           dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
-                        viability_ratio = round(expendable_net_assets / plant_related_debt, 2)
-                        #return_on_net_assets_ratio = ,
-                        #net_operating_revenues_ratio = ,
-                        ) %>%
+                        viability_ratio = round(expendable_net_assets / plant_related_debt, 2),
+                        net_operating_rev_ratio = round(excess_unrest_op_rev / total_unrestricted_op_rev, 2)) %>%
           dplyr::select(-unitid,
                         -instnm)}
       else if (input$this_type == "Private") {
@@ -227,10 +235,13 @@ server <- function(input, output, session) {
                         total_expenses = f2b02,
                         plant_related_debt = f2i06,
                         change_in_net_assets = f2i03,
-                        total_net_assets = f2i04) %>%
+                        total_net_assets = f2i04,
+                        excess_unrest_op_rev = f2i02 - f2e134,
+                        total_unrestricted_op_rev = f2i02) %>%
           dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
                         viability_ratio = round(expendable_net_assets / plant_related_debt, 2),
-                        return_on_net_assets_ratio = round(change_in_net_assets / total_net_assets, 2)) %>%
+                        return_on_net_assets_ratio = round(change_in_net_assets / total_net_assets, 2),
+                        net_operating_rev_ratio = round(excess_unrest_op_rev / total_unrestricted_op_rev), 2) %>%
           dplyr::select(-unitid,
                         -instnm)
       }
@@ -444,179 +455,92 @@ server <- function(input, output, session) {
       }
     }) # close render gt
     
-    
   
-    
-  #   # NET ASSETS TABLE --------------------------------------------------------------------
-  #   output$tbl_net_assets <- render_gt({
-  #     if (input$this_type == "Public") {
-  #     df_financial() %>% 
-  #       dplyr::select(year,
-  #                     change_in_net_assets,
-  #                     total_net_asssets,
-  #                     net_assets_ratio) %>% 
-  #       tidyr::pivot_longer(names_to = "column",
-  #                           values_to = "values",
-  #                           cols = -c("year"),
-  #                           values_transform = list(values = as.character)) %>% 
-  #       dplyr::mutate(values = as.numeric(values)) %>% 
-  #       dplyr::arrange(desc(year)) %>% 
-  #       tidyr::pivot_wider(names_from = "year",
-  #                          values_from = "values") %>% 
-  #       gt(
-  #         rowname_col = "column"
-  #       ) %>% 
-  #       tab_header(title = input$this_college) %>% 
-  #       tab_spanner(
-  #         label = "Year",
-  #         columns = sort(input$this_year, decreasing = T)
-  #       ) %>%
-  #       fmt_number(
-  #         columns = starts_with("2"),
-  #         rows = c("change_in_net_assets",
-  #                  "total_net_asssets"),
-  #         decimals = 0,
-  #         use_seps = TRUE
-  #       ) %>% 
-  #       fmt_currency(columns = everything(),
-  #                    rows = c("change_in_net_assets",
-  #                             "total_net_asssets"),
-  #                    decimals = 0) %>% 
-  #       data_color(
-  #         columns = everything(),
-  #         rows = "net_assets_ratio",
-  #         palette = "#99EDFF"
-  #       )}
-  #     else if (input$this_type == "Private") {
-  #       
-  #     }
-  #     else if (input$this_type == "Not-for-Profit") {
-  #       df_financial() %>% 
-  #         dplyr::select(year,
-  #                       change_in_net_assets,
-  #                       total_revenues_and_investment_return,
-  #                       net_income_ratio) %>% 
-  #         tidyr::pivot_longer(names_to = "column",
-  #                             values_to = "values",
-  #                             cols = -c("year"),
-  #                             values_transform = list(values = as.character)) %>% 
-  #         dplyr::mutate(values = as.numeric(values)) %>% 
-  #         dplyr::arrange(desc(year)) %>% 
-  #         tidyr::pivot_wider(names_from = "year",
-  #                            values_from = "values") %>% 
-  #         gt(
-  #           rowname_col = "column"
-  #         ) %>% 
-  #         tab_header(title = input$this_college) %>% 
-  #         tab_spanner(
-  #           label = "Year",
-  #           columns = sort(input$this_year, decreasing = T)
-  #         ) %>%
-  #         fmt_number(
-  #           columns = starts_with("2"),
-  #           rows = c("change_in_net_assets",
-  #                    "total_revenues_and_investment_return"),
-  #           decimals = 0,
-  #           use_seps = TRUE
-  #         ) %>% 
-  #         fmt_currency(columns = everything(),
-  #                      rows = c("change_in_net_assets",
-  #                               "total_revenues_and_investment_return"),
-  #                      decimals = 0) %>% 
-  #         data_color(
-  #           columns = everything(),
-  #           rows = "net_income_ratio",
-  #           palette = "#F76D5E"
-  #         )
-  #     }
-  #     
-  #   })
-  #   
-  #   # NET OPERATING REVENUE TABLE --------------------------------------------------------------------
-  #   output$tbl_net_op_rev<- render_gt({
-  #     if (input$this_type == "Public") {
-  #       df_financial() %>% 
-  #         dplyr::select(year,
-  #                       operating_income,
-  #                       revenue,
-  #                       net_operating_revenue_ratio) %>% 
-  #         tidyr::pivot_longer(names_to = "column",
-  #                             values_to = "values",
-  #                             cols = -c("year"),
-  #                             values_transform = list(values = as.character)) %>% 
-  #         dplyr::mutate(values = as.numeric(values)) %>% 
-  #         dplyr::arrange(desc(year)) %>% 
-  #         tidyr::pivot_wider(names_from = "year",
-  #                            values_from = "values") %>% 
-  #         gt(
-  #           rowname_col = "column"
-  #         ) %>% 
-  #         tab_header(title = input$this_college) %>% 
-  #         tab_spanner(
-  #           label = "Year",
-  #           columns = sort(input$this_year, decreasing = T)
-  #         ) %>%
-  #         fmt_number(
-  #           columns = starts_with("2"),
-  #           rows = c("operating_income",
-  #                    "revenue"),
-  #           decimals = 0,
-  #           use_seps = TRUE
-  #         ) %>% 
-  #         fmt_currency(columns = everything(),
-  #                      rows = c("operating_income",
-  #                               "revenue"),
-  #                      decimals = 0) %>% 
-  #         data_color(
-  #           columns = everything(),
-  #           method = "numeric",
-  #           rows = "net_operating_revenue_ratio",
-  #           palette = "#FFEE99"
-  #         )}
-  #     else if (input$this_type == "Private") {
-  #       
-  #     }
-  #     else if (input$this_type == "Not-for-Profit") {
-  #       df_financial() %>% 
-  #         dplyr::select(year,
-  #                       net_assets_end_of_year,
-  #                       total_assets,
-  #                       net_operating_revenue_ratio) %>% 
-  #         tidyr::pivot_longer(names_to = "column",
-  #                             values_to = "values",
-  #                             cols = -c("year"),
-  #                             values_transform = list(values = as.character)) %>% 
-  #         dplyr::mutate(values = as.numeric(values)) %>% 
-  #         dplyr::arrange(desc(year)) %>% 
-  #         tidyr::pivot_wider(names_from = "year",
-  #                            values_from = "values") %>% 
-  #         gt(
-  #           rowname_col = "column"
-  #         ) %>% 
-  #         tab_header(title = input$this_college) %>% 
-  #         tab_spanner(
-  #           label = "Year",
-  #           columns = sort(input$this_year, decreasing = T)
-  #         ) %>%
-  #         fmt_number(
-  #           columns = starts_with("2"),
-  #           rows = c("net_assets_end_of_year",
-  #                    "total_assets"),
-  #           decimals = 0,
-  #           use_seps = TRUE
-  #         ) %>% 
-  #         fmt_currency(columns = everything(),
-  #                      rows = c("net_assets_end_of_year",
-  #                               "total_assets"),
-  #                      decimals = 0) %>% 
-  #         data_color(
-  #           columns = everything(),
-  #           method = "numeric",
-  #           rows = "net_operating_revenue_ratio",
-  #           palette = "#FFE099"
-  #         )}
-  #   })
-  #   
+    # NET OPERATING REVENUES TABLE --------------------------------------------------------------------
+    output$tbl_net_op_rev<- render_gt({
+      if (input$this_type == "Public") {
+        df_financial() %>%
+          dplyr::select(year,
+                        excess_unrest_op_rev,
+                        total_unrestricted_op_rev,
+                        net_operating_rev_ratio) %>%
+          tidyr::pivot_longer(names_to = "column",
+                              values_to = "values",
+                              cols = -c("year"),
+                              values_transform = list(values = as.character)) %>%
+          dplyr::mutate(values = as.numeric(values)) %>%
+          dplyr::arrange(desc(year)) %>%
+          tidyr::pivot_wider(names_from = "year",
+                             values_from = "values") %>%
+          gt(
+            rowname_col = "column"
+          ) %>%
+          tab_header(title = input$this_college) %>%
+          tab_spanner(
+            label = "Year",
+            columns = sort(input$this_year, decreasing = T)
+          ) %>%
+          fmt_number(
+            columns = starts_with("2"),
+            rows = c("excess_unrest_op_rev",
+                     "total_unrestricted_op_rev"),
+            decimals = 0,
+            use_seps = TRUE
+          ) %>%
+          fmt_currency(columns = everything(),
+                       rows = c("excess_unrest_op_rev",
+                                "total_unrestricted_op_rev"),
+                       decimals = 0) %>%
+          data_color(
+            columns = everything(),
+            method = "numeric",
+            rows = "net_operating_rev_ratio",
+            palette = "#FFEE99"
+          )}
+      else if (input$this_type == "Private") {
+
+      }
+      else if (input$this_type == "Not-for-Profit") {
+        df_financial() %>%
+          dplyr::select(year,
+                        excess_unrest_op_rev,
+                        total_unrestricted_op_rev,
+                        net_operating_rev_ratio) %>%
+          tidyr::pivot_longer(names_to = "column",
+                              values_to = "values",
+                              cols = -c("year"),
+                              values_transform = list(values = as.character)) %>%
+          dplyr::mutate(values = as.numeric(values)) %>%
+          dplyr::arrange(desc(year)) %>%
+          tidyr::pivot_wider(names_from = "year",
+                             values_from = "values") %>%
+          gt(
+            rowname_col = "column"
+          ) %>%
+          tab_header(title = input$this_college) %>%
+          tab_spanner(
+            label = "Year",
+            columns = sort(input$this_year, decreasing = T)
+          ) %>%
+          fmt_number(
+            columns = starts_with("2"),
+            rows = c("excess_unrest_op_rev",
+                     "total_unrestricted_op_rev"),
+            decimals = 0,
+            use_seps = TRUE
+          ) %>%
+          fmt_currency(columns = everything(),
+                       rows = c("excess_unrest_op_rev",
+                                "total_unrestricted_op_rev"),
+                       decimals = 0) %>%
+          data_color(
+            columns = everything(),
+            method = "numeric",
+            rows = "net_operating_rev_ratio",
+            palette = "#FFE099"
+          )}
+    })
+
   
   
   
