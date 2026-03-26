@@ -3,6 +3,7 @@ library(tidyverse)
 library(janitor)
 library(bslib)
 library(gt)
+library(DT)
 source(here::here('src/functions/load_functions.R'))
 load_functions()
 
@@ -26,7 +27,6 @@ df_directory <- load_directory(years) %>%
   mutate_if(is.character, utf8::utf8_encode)
 df_institutions <- load_institution_types(years)
 
-min_card_height = 350
 
 # Links
 link_scr <- tags$a("Strategic Corporate Research", href = "https://strategiccorporateresearch.org/", target = "_blank")
@@ -69,16 +69,22 @@ ui <- page_sidebar(
       nav_panel(
         title = "Key Ratios",
         
+        # card(
+        #   min_height = min_card_height,
+        #   dataTableOutput("checker")
+        # ),
+        # 
+        # Primary Reserve Ratio
         card(
-          min_height = min_card_height,
+          max_height = 450,
           card_header(
             "Primary Reserve Ratio"
           ),
-          card_body("The primary reserve ratio answers the question: Are resources sufficient and flexible enough to support the mission?"),
-          gt_output('tbl_primary_reserve'),
-          card_body(markdown("What is a good ratio? **0.4 or higher**
+          card_body(markdown("The primary reserve ratio answers the question: Are resources sufficient and flexible enough to support the mission?"),
+          dataTableOutput("tbl_primary_reserve"),
+          markdown("What is a good ratio? **0.4 or higher**
                              
-                             What is a bad ratio? **0.15 or lower**"))
+                  What is a bad ratio? **0.15 or lower**"))
         ),
         
         # card(
@@ -93,7 +99,7 @@ ui <- page_sidebar(
         # 
         
         card(
-          min_height = min_card_height,
+          max_height = 490,
           card_header(
             "Viability Ratio"
           ),
@@ -101,20 +107,20 @@ ui <- page_sidebar(
           
           1. Are debt resources managed strategically to advance the mission?
           
-          2. Can the institution use its expendable net assets to cover debt?")),
-          gt_output('tbl_viability'),
-          card_body(markdown("A good ratio depends on the firm's goals.  1:1 is nice, but less than that can be fine too if the firm's goals are to..."))
+          2. Can the institution use its expendable net assets to cover debt?"),
+          dataTableOutput('tbl_viability'),
+          markdown("A good ratio depends on the firm's goals.  1:1 is nice, but less than that can be fine too if the firm's goals are to..."))
         )
       ), # close nav_panel key ratios
         
         card(
-          min_height = min_card_height,
+          max_height = 520,
           card_header(
             "Net Operating Revenues Ratio"
           ),
-          card_body("The Net Operating Revenues Ratio answers the question: Do operating results indicate the institution is living within available resources?"),
-          gt_output('tbl_net_op_rev'),
-          card_body(markdown("A positive ratio means there is an operating surplus for the year. A negative ratio means a loss for the year.
+          card_body(markdown("The Net Operating Revenues Ratio answers the question: Do operating results indicate the institution is living within available resources?"),
+          dataTableOutput('tbl_net_op_rev'),
+          markdown("A positive ratio means there is an operating surplus for the year. A negative ratio means a loss for the year.
           Generally, the bigger the surplus, the better. However, too big of a surplus might indicate that the institution is not spending enough on mission-critical investments.
           An average of 2-4% over a period of several years for most institutions is good. Your goal should be to find out why there is a surplus or deficit. 
           The institution should aim for long-term equilibrium."))
@@ -145,6 +151,9 @@ ui <- page_sidebar(
 # Define server ----------------------------------------------------------------
 
 server <- function(input, output, session) {
+  
+  # Colors
+  primary_reserve_color = "r"
   
   
   # REACTION SELECTION ---------------------------------------------------------------------  
@@ -250,7 +259,7 @@ server <- function(input, output, session) {
     
     
     # PRIMARY RESERVE TABLE --------------------------------------------------------------------
-    output$tbl_primary_reserve <- render_gt({
+    output$tbl_primary_reserve <- renderDataTable({
       if (input$this_type == "Public") {
         df_financial() %>% 
           dplyr::select(year,
@@ -265,30 +274,8 @@ server <- function(input, output, session) {
           dplyr::arrange(desc(year)) %>% 
           tidyr::pivot_wider(names_from = "year",
                       values_from = "values") %>% 
-          gt(
-            rowname_col = "column"
-          ) %>% 
-          tab_header(title = input$this_college) %>% 
-          tab_spanner(
-            label = "Year",
-            columns = sort(input$this_year, decreasing = T)
-          ) %>%
-          fmt_number(
-            columns = starts_with("2"),
-            rows = c("expendable_net_assets",
-                     "total_expenses"),
-            decimals = 0,
-            use_seps = TRUE
-          ) %>% 
-          fmt_currency(columns = everything(),
-                       rows = c("expendable_net_assets",
-                                "total_expenses"),
-                       decimals = 0) %>% 
-          data_color(
-            columns = everything(),
-            rows = "primary_reserve_ratio",
-            palette = "#007FFF"
-          )}
+          ratio_table_formatting(ratio = "primary_reserve")
+        }
       else if (input$this_type == "Private") {
         df_financial() %>% 
           dplyr::select(year,
@@ -303,30 +290,7 @@ server <- function(input, output, session) {
           dplyr::arrange(desc(year)) %>%
           tidyr::pivot_wider(names_from = "year",
                              values_from = "values") %>%
-          gt(
-            rowname_col = "column"
-          ) %>%
-          tab_header(title = input$this_college) %>%
-          tab_spanner(
-            label = "Year",
-            columns = sort(input$this_year, decreasing = T)
-          ) %>%
-          fmt_number(
-            columns = starts_with("2"),
-            rows = c("expendable_net_assets",
-                     "total_expenses"),
-            decimals = 0,
-            use_seps = TRUE
-          ) %>%
-          fmt_currency(columns = everything(),
-                       rows = c("expendable_net_assets",
-                                "total_expenses"),
-                       decimals = 0) %>%
-          data_color(
-            columns = everything(),
-            rows = "primary_reserve_ratio",
-            palette = "#007FFF"
-          )
+          ratio_table_formatting(ratio = "primary_reserve")
       }
       else if (input$this_type == "Not-for-Profit") {
         df_financial() %>% 
@@ -342,35 +306,13 @@ server <- function(input, output, session) {
           dplyr::arrange(desc(year)) %>% 
           tidyr::pivot_wider(names_from = "year",
                              values_from = "values") %>% 
-          gt(data = .,
-             rowname_col = "column"
-          ) %>% 
-          tab_header(title = input$this_college) %>% 
-          tab_spanner(
-            label = "Year",
-            columns = sort(input$this_year, decreasing = T)
-          ) %>%
-          fmt_number(
-            columns = starts_with("2"),
-            rows = c("expendable_net_assets",
-                     "total_expenses"),
-            decimals = 0,
-            use_seps = TRUE
-          ) %>%
-          fmt_currency(columns = everything(),
-                       rows = c("expendable_net_assets",
-                                "total_expenses"),
-                       decimals = 0) %>%
-          data_color(
-            columns = everything(),
-            rows = "primary_reserve_ratio",
-            palette = "#A50021"
-          )}
-    })
+          ratio_table_formatting(ratio = "primary_reserve")}
+    }) # close render DT
+
     
     
       # VIABILITY TABLE --------------------------------------------------------------------
-      output$tbl_viability <- render_gt({
+      output$tbl_viability <- renderDataTable({
         if (input$this_type == "Public") {
           df_financial() %>%
             dplyr::select(year,
@@ -384,32 +326,8 @@ server <- function(input, output, session) {
             dplyr::mutate(values = as.numeric(values)) %>%
             dplyr::arrange(desc(year)) %>%
             tidyr::pivot_wider(names_from = "year",
-                               values_from = "values") %>%
-            gt(
-              rowname_col = "column"
-            ) %>%
-            tab_header(title = input$this_college) %>%
-            tab_spanner(
-              label = "Year",
-              columns = sort(input$this_year, decreasing = T)
-            ) %>%
-            fmt_number(
-              columns = starts_with("2"),
-              rows = c("expendable_net_assets",
-                       "plant_related_debt"),
-              decimals = 0,
-              use_seps = TRUE
-            ) %>%
-            fmt_currency(columns = everything(),
-                         rows = c("expendable_net_assets",
-                                  "plant_related_debt"),
-                         decimals = 0) %>%
-            data_color(
-              columns = everything(),
-              method = "numeric",
-              rows = "viability_ratio",
-              palette = "#FF7F00"
-            )}
+                               values_from = "values") %>% 
+            ratio_table_formatting(ratio = "viability")}
         else if (input$this_type == "Private") {
 
         }
@@ -426,38 +344,14 @@ server <- function(input, output, session) {
             dplyr::mutate(values = as.numeric(values)) %>%
             dplyr::arrange(desc(year)) %>%
             tidyr::pivot_wider(names_from = "year",
-                               values_from = "values") %>%
-            gt(
-              rowname_col = "column"
-            ) %>%
-            tab_header(title = input$this_college) %>%
-            tab_spanner(
-              label = "Year",
-              columns = sort(input$this_year, decreasing = T)
-            ) %>%
-            fmt_number(
-              columns = starts_with("2"),
-              rows = c("expendable_net_assets",
-                       "plant_related_debt"),
-              decimals = 0,
-              use_seps = TRUE
-            ) %>%
-            fmt_currency(columns = everything(),
-                         rows = c("expendable_net_assets",
-                                  "plant_related_debt"),
-                         decimals = 0) %>%
-            data_color(
-              columns = everything(),
-              method = "numeric",
-              rows = "viability_ratio",
-              palette = "#FF7F00"
-            )
+                               values_from = "values") %>% 
+            ratio_table_formatting(ratio = "viability")
       }
-    }) # close render gt
+    }) # close render DT
     
   
     # NET OPERATING REVENUES TABLE --------------------------------------------------------------------
-    output$tbl_net_op_rev<- render_gt({
+    output$tbl_net_op_rev<- renderDataTable({
       if (input$this_type == "Public") {
         df_financial() %>%
           dplyr::select(year,
@@ -472,31 +366,7 @@ server <- function(input, output, session) {
           dplyr::arrange(desc(year)) %>%
           tidyr::pivot_wider(names_from = "year",
                              values_from = "values") %>%
-          gt(
-            rowname_col = "column"
-          ) %>%
-          tab_header(title = input$this_college) %>%
-          tab_spanner(
-            label = "Year",
-            columns = sort(input$this_year, decreasing = T)
-          ) %>%
-          fmt_number(
-            columns = starts_with("2"),
-            rows = c("excess_unrest_op_rev",
-                     "total_unrestricted_op_rev"),
-            decimals = 0,
-            use_seps = TRUE
-          ) %>%
-          fmt_currency(columns = everything(),
-                       rows = c("excess_unrest_op_rev",
-                                "total_unrestricted_op_rev"),
-                       decimals = 0) %>%
-          data_color(
-            columns = everything(),
-            method = "numeric",
-            rows = "net_operating_rev_ratio",
-            palette = "#FFEE99"
-          )}
+          ratio_table_formatting(ratio = "net_operating_revenues")}
       else if (input$this_type == "Private") {
 
       }
@@ -514,31 +384,7 @@ server <- function(input, output, session) {
           dplyr::arrange(desc(year)) %>%
           tidyr::pivot_wider(names_from = "year",
                              values_from = "values") %>%
-          gt(
-            rowname_col = "column"
-          ) %>%
-          tab_header(title = input$this_college) %>%
-          tab_spanner(
-            label = "Year",
-            columns = sort(input$this_year, decreasing = T)
-          ) %>%
-          fmt_number(
-            columns = starts_with("2"),
-            rows = c("excess_unrest_op_rev",
-                     "total_unrestricted_op_rev"),
-            decimals = 0,
-            use_seps = TRUE
-          ) %>%
-          fmt_currency(columns = everything(),
-                       rows = c("excess_unrest_op_rev",
-                                "total_unrestricted_op_rev"),
-                       decimals = 0) %>%
-          data_color(
-            columns = everything(),
-            method = "numeric",
-            rows = "net_operating_rev_ratio",
-            palette = "#FFE099"
-          )}
+          ratio_table_formatting(ratio = "net_operating_revenues")}
     })
 
   
