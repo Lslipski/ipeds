@@ -114,7 +114,7 @@ ui <- page_sidebar(
       ), # close nav_panel key ratios
         
         card(
-          max_height = 520,
+          max_height = 500,
           card_header(
             "Net Operating Revenues Ratio"
           ),
