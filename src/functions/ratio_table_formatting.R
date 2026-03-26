@@ -40,7 +40,6 @@ ratio_table_formatting <- function(df,
                      buttons = c('copy', 'csv')
                    ),
                    class = "compact",
-                   lazyRender = FALSE,
                    selection = list(mode = "single",
                                     selected = 3,
                                     target = "row")) %>% 
