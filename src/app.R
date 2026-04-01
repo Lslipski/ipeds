@@ -110,8 +110,7 @@ ui <- page_sidebar(
           2. Can the institution use its expendable net assets to cover debt?"),
           dataTableOutput('tbl_viability'),
           markdown("A good ratio depends on the firm's goals.  1:1 is nice, but less than that can be fine too if the firm's goals are to..."))
-        )
-      ), # close nav_panel key ratios
+        ),
         
         card(
           max_height = 500,
@@ -124,7 +123,8 @@ ui <- page_sidebar(
           Generally, the bigger the surplus, the better. However, too big of a surplus might indicate that the institution is not spending enough on mission-critical investments.
           An average of 2-4% over a period of several years for most institutions is good. Your goal should be to find out why there is a surplus or deficit. 
           The institution should aim for long-term equilibrium."))
-        ),
+        )
+      ), # close nav_panel key ratios
     
     nav_panel(
       title = "Institution Lookup",
