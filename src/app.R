@@ -77,7 +77,7 @@ ui <- page_sidebar(
         # 
         # Primary Reserve Ratio
         card(
-          max_height = 450,
+          max_height = 500,
           card_header(
             "Primary Reserve Ratio"
           ),
@@ -112,7 +112,7 @@ ui <- page_sidebar(
           1. Does asset performance and management support the strategic direction?
                       
           2. Is the institution better off this year than previous years?"),
-          dataTableOutput("tbl_primary_reserve"),
+          dataTableOutput("tbl_return_net_assets"),
           markdown("What is a good ratio? **3-4%**"))
           ),
         
@@ -286,25 +286,9 @@ server <- function(input, output, session) {
           dplyr::mutate(values = as.numeric(values)) %>% 
           dplyr::arrange(desc(year)) %>% 
           tidyr::pivot_wider(names_from = "year",
-                      values_from = "values") %>% 
+                      values_from = "values") %>%
           ratio_table_formatting(ratio = "primary_reserve")
         }
-      # else if (input$this_type == "Private") {
-      #   df_financial() %>% 
-      #     dplyr::select(year,
-      #                   expendable_net_assets,
-      #                   total_expenses,
-      #                   primary_reserve_ratio) %>%
-      #     tidyr::pivot_longer(names_to = "column",
-      #                         values_to = "values",
-      #                         cols = -c("year"),
-      #                         values_transform = list(values = as.character)) %>%
-      #     dplyr::mutate(values = as.numeric(values)) %>%
-      #     dplyr::arrange(desc(year)) %>%
-      #     tidyr::pivot_wider(names_from = "year",
-      #                        values_from = "values") %>%
-      #     ratio_table_formatting(ratio = "primary_reserve")
-      # }
     }) # close render DT
 
     
@@ -332,7 +316,7 @@ server <- function(input, output, session) {
       
       
       # RETURN ON NET ASSETS TABLE --------------------------------------------------------------------
-      output$tbl_viability <- renderDataTable({
+      output$tbl_return_net_assets <- renderDataTable({
         if (input$this_type %in% c("Public",
                                    "Not-for-Profit")) {
           df_financial() %>%
