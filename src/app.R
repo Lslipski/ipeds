@@ -25,7 +25,8 @@ df_f2 <- load_nfp_financial(years)
 #df_f3 <- load_private_financial(years)
 df_directory <- load_directory(years) %>% 
   mutate_if(is.character, utf8::utf8_encode)
-df_institutions <- load_institution_types(years)
+df_institutions <- load_institution_types(years) %>%
+  filter(type %in% institution_types)
 
 
 # Links
@@ -87,17 +88,6 @@ ui <- page_sidebar(
                   What is a bad ratio? **0.15 or lower**"))
         ),
         
-        # card(
-        #   min_height = min_card_height,
-        #   card_header(
-        #     "Net Asset Ratio"
-        #   ),
-        #   card_body("The net asset ratio divides the change in net assets by the total net assets of the university and 
-        #             gives an estimate of..."),
-        #   gt_output('tbl_net_assets')
-        # ),
-        # 
-        
         card(
           max_height = 490,
           card_header(
@@ -115,11 +105,29 @@ ui <- page_sidebar(
         card(
           max_height = 500,
           card_header(
+            "Return on Net Assets Ratio"
+          ),
+          card_body(markdown("The Return on Net Assets Ratios answers the questions: 
+          
+          1. Does asset performance and management support the strategic direction?
+                      
+          2. Is the institution better off this year than previous years?"),
+          dataTableOutput("tbl_primary_reserve"),
+          markdown("What is a good ratio? **3-4%**"))
+          ),
+        
+        card(
+          max_height = 600,
+          card_header(
             "Net Operating Revenues Ratio"
           ),
-          card_body(markdown("The Net Operating Revenues Ratio answers the question: Do operating results indicate the institution is living within available resources?"),
+          card_body(markdown("The Net Operating Revenues Ratio answers the question: 
+                             
+                  Do operating results indicate the institution is living within available resources?"),
           dataTableOutput('tbl_net_op_rev'),
-          markdown("A positive ratio means there is an operating surplus for the year. A negative ratio means a loss for the year.
+          markdown("What is a good ratio?
+          
+          A positive ratio means there is an operating surplus for the year. A negative ratio means a loss for the year.
           Generally, the bigger the surplus, the better. However, too big of a surplus might indicate that the institution is not spending enough on mission-critical investments.
           An average of 2-4% over a period of several years for most institutions is good. Your goal should be to find out why there is a surplus or deficit. 
           The institution should aim for long-term equilibrium."))
@@ -201,35 +209,38 @@ server <- function(input, output, session) {
                         unitid,
                         instnm,
                         expendable_net_assets = f1n05,
-                        total_expenses = f1d02,
-                        plant_related_debt = f1d03,
-                        excess_unrest_op_rev = f1n01,
-                        total_unrestricted_op_rev = f1n02
+                        total_expenses = f1n07,
+                        plant_related_debt = f1n06,
+                        change_in_net_assets = f1n03,
+                        total_net_assets = f1n04,
+                        total_unrestricted_op_revenue = f1n02,
+                        change_unrestricted_net_assets = f1n01
                         ) %>%
           dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
                         viability_ratio = round(expendable_net_assets / plant_related_debt, 2),
-                        net_operating_rev_ratio = round(excess_unrest_op_rev / total_unrestricted_op_rev, 2)) %>%
+                        return_on_net_assets_ratio = round(change_in_net_assets / total_net_assets, 2),
+                        net_operating_rev_ratio = round(change_unrestricted_net_assets / total_unrestricted_op_revenue, 2)) %>%
           dplyr::select(-unitid,
                         -instnm)}
-      else if (input$this_type == "Private") {
-        df_f3 %>% 
-              dplyr::left_join(df_directory,
-                               by = c("unitid" = "unitid",
-                                      "year" = "year")) %>%
-              dplyr::filter(instnm == input$this_college,
-                            year %in% input$this_year) %>%
-              dplyr::select(year,
-                            unitid,
-                            instnm,
-                            unrestricted_net_assets = f3a04) %>%
-              dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
-                            net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2),
-                            operating_income = op_inc_b09 - op_inc_c110,
-                            net_operating_revenue_ratio = round(operating_income / revenue, 2),
-                            viability_ratio = round(expendable_net_assets / long_term_debt, 2)) %>%
-              dplyr::select(-unitid,
-                            -instnm)
-      }
+      # else if (input$this_type == "Private") {
+      #   df_f3 %>% 
+      #         dplyr::left_join(df_directory,
+      #                          by = c("unitid" = "unitid",
+      #                                 "year" = "year")) %>%
+      #         dplyr::filter(instnm == input$this_college,
+      #                       year %in% input$this_year) %>%
+      #         dplyr::select(year,
+      #                       unitid,
+      #                       instnm,
+      #                       unrestricted_net_assets = f3a04) %>%
+      #         dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
+      #                       net_assets_ratio = round(change_in_net_assets / total_net_asssets, 2),
+      #                       operating_income = op_inc_b09 - op_inc_c110,
+      #                       net_operating_revenue_ratio = round(operating_income / revenue, 2),
+      #                       viability_ratio = round(expendable_net_assets / long_term_debt, 2)) %>%
+      #         dplyr::select(-unitid,
+      #                       -instnm)
+      # }
       else if (input$this_type == "Not-for-Profit") {
         df_f2 %>% 
           dplyr::left_join(df_directory,
@@ -241,16 +252,17 @@ server <- function(input, output, session) {
                         unitid,
                         instnm,
                         expendable_net_assets = f2i05,
-                        total_expenses = f2b02,
+                        total_expenses = f2i07,
                         plant_related_debt = f2i06,
                         change_in_net_assets = f2i03,
                         total_net_assets = f2i04,
-                        excess_unrest_op_rev = f2i02 - f2e134,
-                        total_unrestricted_op_rev = f2i02) %>%
+                        total_unrestricted_op_revenue = f2i02,
+                        change_unrestricted_net_assets = f2i01
+          ) %>%
           dplyr::mutate(primary_reserve_ratio = round(expendable_net_assets / total_expenses, 2),
                         viability_ratio = round(expendable_net_assets / plant_related_debt, 2),
                         return_on_net_assets_ratio = round(change_in_net_assets / total_net_assets, 2),
-                        net_operating_rev_ratio = round(excess_unrest_op_rev / total_unrestricted_op_rev), 2) %>%
+                        net_operating_rev_ratio = round(change_unrestricted_net_assets / total_unrestricted_op_revenue, 2)) %>%
           dplyr::select(-unitid,
                         -instnm)
       }
@@ -260,7 +272,8 @@ server <- function(input, output, session) {
     
     # PRIMARY RESERVE TABLE --------------------------------------------------------------------
     output$tbl_primary_reserve <- renderDataTable({
-      if (input$this_type == "Public") {
+      if (input$this_type %in% c("Public",
+                                 "Not-for-Profit")) {
         df_financial() %>% 
           dplyr::select(year,
                         expendable_net_assets,
@@ -276,44 +289,30 @@ server <- function(input, output, session) {
                       values_from = "values") %>% 
           ratio_table_formatting(ratio = "primary_reserve")
         }
-      else if (input$this_type == "Private") {
-        df_financial() %>% 
-          dplyr::select(year,
-                        expendable_net_assets,
-                        total_expenses,
-                        primary_reserve_ratio) %>%
-          tidyr::pivot_longer(names_to = "column",
-                              values_to = "values",
-                              cols = -c("year"),
-                              values_transform = list(values = as.character)) %>%
-          dplyr::mutate(values = as.numeric(values)) %>%
-          dplyr::arrange(desc(year)) %>%
-          tidyr::pivot_wider(names_from = "year",
-                             values_from = "values") %>%
-          ratio_table_formatting(ratio = "primary_reserve")
-      }
-      else if (input$this_type == "Not-for-Profit") {
-        df_financial() %>% 
-          dplyr::select(year,
-                        expendable_net_assets,
-                        total_expenses,
-                        primary_reserve_ratio) %>% 
-          tidyr::pivot_longer(names_to = "column",
-                              values_to = "values",
-                              cols = -c("year"),
-                              values_transform = list(values = as.character)) %>% 
-          dplyr::mutate(values = as.numeric(values)) %>% 
-          dplyr::arrange(desc(year)) %>% 
-          tidyr::pivot_wider(names_from = "year",
-                             values_from = "values") %>% 
-          ratio_table_formatting(ratio = "primary_reserve")}
+      # else if (input$this_type == "Private") {
+      #   df_financial() %>% 
+      #     dplyr::select(year,
+      #                   expendable_net_assets,
+      #                   total_expenses,
+      #                   primary_reserve_ratio) %>%
+      #     tidyr::pivot_longer(names_to = "column",
+      #                         values_to = "values",
+      #                         cols = -c("year"),
+      #                         values_transform = list(values = as.character)) %>%
+      #     dplyr::mutate(values = as.numeric(values)) %>%
+      #     dplyr::arrange(desc(year)) %>%
+      #     tidyr::pivot_wider(names_from = "year",
+      #                        values_from = "values") %>%
+      #     ratio_table_formatting(ratio = "primary_reserve")
+      # }
     }) # close render DT
 
     
     
       # VIABILITY TABLE --------------------------------------------------------------------
       output$tbl_viability <- renderDataTable({
-        if (input$this_type == "Public") {
+        if (input$this_type %in% c("Public",
+                                   "Not-for-Profit")) {
           df_financial() %>%
             dplyr::select(year,
                           expendable_net_assets,
@@ -328,15 +327,19 @@ server <- function(input, output, session) {
             tidyr::pivot_wider(names_from = "year",
                                values_from = "values") %>% 
             ratio_table_formatting(ratio = "viability")}
-        else if (input$this_type == "Private") {
-
-        }
-        else if (input$this_type == "Not-for-Profit") {
+    }) # close render DT
+      
+      
+      
+      # RETURN ON NET ASSETS TABLE --------------------------------------------------------------------
+      output$tbl_viability <- renderDataTable({
+        if (input$this_type %in% c("Public",
+                                   "Not-for-Profit")) {
           df_financial() %>%
             dplyr::select(year,
-                          expendable_net_assets,
-                          plant_related_debt,
-                          viability_ratio) %>%
+                          change_in_net_assets,
+                          total_net_assets,
+                          return_on_net_assets_ratio) %>%
             tidyr::pivot_longer(names_to = "column",
                                 values_to = "values",
                                 cols = -c("year"),
@@ -345,36 +348,19 @@ server <- function(input, output, session) {
             dplyr::arrange(desc(year)) %>%
             tidyr::pivot_wider(names_from = "year",
                                values_from = "values") %>% 
-            ratio_table_formatting(ratio = "viability")
-      }
-    }) # close render DT
+            ratio_table_formatting(ratio = "return_on_net_assets")}
+      }) # close render DT
+      
     
   
     # NET OPERATING REVENUES TABLE --------------------------------------------------------------------
     output$tbl_net_op_rev<- renderDataTable({
-      if (input$this_type == "Public") {
+      if (input$this_type %in% c("Public",
+                                 "Not-for-Profit")) {
         df_financial() %>%
           dplyr::select(year,
-                        excess_unrest_op_rev,
-                        total_unrestricted_op_rev,
-                        net_operating_rev_ratio) %>%
-          tidyr::pivot_longer(names_to = "column",
-                              values_to = "values",
-                              cols = -c("year"),
-                              values_transform = list(values = as.character)) %>%
-          dplyr::mutate(values = as.numeric(values)) %>%
-          dplyr::arrange(desc(year)) %>%
-          tidyr::pivot_wider(names_from = "year",
-                             values_from = "values") %>%
-          ratio_table_formatting(ratio = "net_operating_revenues")}
-      else if (input$this_type == "Private") {
-
-      }
-      else if (input$this_type == "Not-for-Profit") {
-        df_financial() %>%
-          dplyr::select(year,
-                        excess_unrest_op_rev,
-                        total_unrestricted_op_rev,
+                        change_unrestricted_net_assets,
+                        total_unrestricted_op_revenue,
                         net_operating_rev_ratio) %>%
           tidyr::pivot_longer(names_to = "column",
                               values_to = "values",
